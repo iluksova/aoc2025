@@ -1,8 +1,5 @@
 import pathlib
-import re
 from collections import Counter
-
-import math
 
 lines = pathlib.Path('_input/7/input.txt').open('r').readlines()
 lines = [line.strip() for line in lines]

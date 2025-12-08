@@ -51,3 +51,34 @@ for i in range(3):
     sum = sizes[i] * sum
 
 print(f'Part 1: {sum}')
+
+n = len(coordinates) -1
+print(n)
+
+
+cycles=[]
+last = None
+for junction, distance in sorted_distances.items():
+    if len(set().union(*cycles)) == 999:
+        last = junction
+
+    added = False
+    added_c = []
+    for c in cycles:
+        if junction[0] in c or junction[1] in c:
+            c.add(junction[0])
+            c.add(junction[1])
+            added = True
+            added_c.append(c)
+    if len(added_c) == 0:
+        cycles.append({junction[0], junction[1]})
+    elif len(added_c) > 1:
+        union_c = set()
+        for c in added_c:
+            cycles.remove(c)
+            union_c = union_c.union(c)
+        cycles.append(union_c)
+
+sum_2 = coordinates[last[0]][0] * coordinates[last[1]][0]
+print(f'Part 2: {sum_2}')
+

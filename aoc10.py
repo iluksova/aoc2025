@@ -1,8 +1,12 @@
 import itertools
 import pathlib
 import re
-from collections import Counter
 from typing import Optional
+
+import numpy as np
+from scipy.optimize import Bounds
+from scipy.optimize import LinearConstraint
+from scipy.optimize import milp
 
 lines = pathlib.Path('_input/10/input.txt').open('r').readlines()
 lines = [line.strip() for line in lines]
@@ -97,16 +101,35 @@ def find_min_switches_joltage(target_joltage: list[int], buttons_list: list[list
     return min(counts)
 
 
-# assert find_min_switches_joltage([3, 5, 4, 7], [[3], [1, 3], [2], [2, 3], [0, 2], [0, 1]]) == 10
 
-# print(
-#     find_min_switches_joltage_2(
-#         [41, 60, 170, 51, 186, 40, 30, 34, 44],
-#         [[8], [0, 1, 3, 4, 6, 8], [1, 3, 4, 5, 7, 8], [2, 4], [0, 1, 3, 5], [0, 2, 3, 4, 5, 7, 8], [1, 2, 3], [0, 2, 5, 7], [1, 2, 6], [0, 1, 6], [1, 2, 4, 5, 6, 7, 8]],
-#     ),
-# )
-(
-    find_min_switches_joltage(
+def find_min_switches_joltage_ilp(target_joltage: list[int], buttons_list: list[list[int]]) -> int:
+    n_buttons = len(buttons_list)
+    n_indices = len(target_joltage)
+
+    c = np.ones(n_buttons)
+
+    A = np.zeros((n_indices, n_buttons))
+    for i in range(n_indices):
+        for b in range(n_buttons):
+            if i in buttons_list[b]:
+                A[i, b] = 1
+
+    b = np.array(target_joltage)
+
+    integrality = np.ones(n_buttons, dtype=int)
+    bounds = Bounds(lb=np.zeros(n_buttons), ub=np.full(n_buttons, np.inf))
+
+    constraint = LinearConstraint(A, b, b)
+
+    res = milp(c=c, constraints=constraint, integrality=integrality, bounds=bounds)
+
+    assert res.success
+
+    return int(res.fun)
+
+
+print(
+    find_min_switches_joltage_ilp(
         [72, 69, 79, 61, 83, 33, 69, 84, 61, 86],
         [
             [1, 4, 5, 9],
@@ -132,7 +155,7 @@ for i in range(len(joltage_list)):
     joltage = joltage_list[i]
     print(f'Solving {joltage}')
     buttons = buttons_list[i]
-    minimum = find_min_switches_joltage(joltage, buttons)
+    minimum = find_min_switches_joltage_ilp(joltage, buttons)
     total += minimum
 
 print(f'Part 2: {total}')
